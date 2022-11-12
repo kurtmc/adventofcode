@@ -77,9 +77,6 @@ func main() {
 	for len(Q) != 0 {
 		// u ← vertex in Q with min dist[u]
 		u := minDistance(&Q, dist)
-		fmt.Println("u := minDistance(&Q, dist)")
-		fmt.Printf("u := %v\n", u)
-		//Q = append(Q[:minIndex], Q[minIndex+1:]...)
 
 		n := neighbors(u, Q)
 
@@ -87,14 +84,11 @@ func main() {
 		for _, v := range n {
 			// alt ← dist[u] + Graph.Edges(u, v)
 			alt := dist[u] + riskMap[v.Y][v.X]
-			fmt.Printf("alt: %d\n", alt)
-			fmt.Printf("dist[%v]: %d\n", v, dist[v])
 			// if alt < dist[v]:
 			if (dist[v] == -1 && alt >= 0) || alt < dist[v] {
 				// dist[v] ← alt
 				dist[v] = alt
 				prev[v] = u
-				fmt.Printf("prev[%v] = %v\n", v, u)
 				// prev[v] ← u
 			}
 		}
@@ -107,14 +101,7 @@ func main() {
 	u := Point{X: x - 1, Y: y - 1}
 	//  if prev[u] is defined or u = source:          // Do something only if the vertex is reachable
 
-	fmt.Printf("prev: %v\n", prev)
-
-	fmt.Printf("u: %v\n", u)
-	fmt.Printf("prev[%v]: %v\n", u, prev[u])
 	if _, ok := prev[u]; ok || (u.X == 0 && u.Y == 0) {
-		fmt.Println("####################")
-		fmt.Println("####################")
-		fmt.Println("####################")
 		//      while u is defined:                       // Construct the shortest path with a stack S
 		for ok {
 			//          insert u at the beginning of S        // Push the vertex onto the stack
@@ -123,10 +110,6 @@ func main() {
 			u, ok = prev[u]
 		}
 	}
-
-	//fmt.Println(dist)
-	//fmt.Println(len(prev))
-	fmt.Printf("S: %v\n", S)
 
 	printPath(riskMap, S)
 
@@ -167,8 +150,6 @@ func isInList(u Point, Q []Point) bool {
 }
 
 func neighbors(u Point, Q []Point) []Point {
-	fmt.Printf("find neighbors for u (%v)\n", u)
-
 	result := make([]Point, 0)
 
 	neighborCoordinates := [][]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
@@ -181,8 +162,6 @@ func neighbors(u Point, Q []Point) []Point {
 			}
 		}
 	}
-
-	fmt.Printf("neighbors: %v\n", result)
 
 	return result
 }
@@ -225,8 +204,8 @@ func printPath(riskMap [][]int, S []Point) {
 
 // vertex in Q with min dist[u]
 func minDistance(Q *[]Point, dist map[Point]int) Point {
-	fmt.Println("vertex in Q with min dist[u]")
-	fmt.Printf("Q: %v\n", *Q)
+	//fmt.Println("vertex in Q with min dist[u]")
+	//fmt.Printf("Q: %v\n", *Q)
 
 	min := -1 // -1 represents infinity
 	index := 0
@@ -246,7 +225,6 @@ func minDistance(Q *[]Point, dist map[Point]int) Point {
 	}
 
 	u := (*Q)[index]
-	fmt.Printf("Q[minIndex]: %v\n", (*Q)[index])
 	*Q = append((*Q)[:index], (*Q)[index+1:]...)
 	return u
 }
