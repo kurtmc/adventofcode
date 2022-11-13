@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"container/heap"
 	"fmt"
 	"log"
 	"os"
@@ -237,7 +238,7 @@ import (
 var x, y int = 0, 0
 
 func main() {
-	file, err := os.Open("sample-part-1.txt")
+	file, err := os.Open("input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -275,41 +276,49 @@ func main() {
 	}
 
 	newRiskMap := extend(riskMap, 5)
-
-	fmt.Println("risk map:")
-	fmt.Println(newRiskMap)
-	printMatrix(newRiskMap)
-
-	os.Exit(0)
+	riskMap = newRiskMap
+	x = x * 5
+	y = y * 5
 
 	fmt.Printf("width: %d\n", x)
 	fmt.Printf("height: %d\n", y)
 
 	dist := make(map[Point]int, 0)
 	prev := make(map[Point]Point, 0)
-	Q := make([]Point, 0)
-
-	for i := 0; i < x; i++ {
-		for j := 0; j < y; j++ {
-			v := Point{X: i, Y: j}
-			dist[v] = 9999999
-			// prev[v] := undefined
-			Q = append(Q, Point{X: i, Y: j})
-		}
-
-	}
 
 	// dist[source] ← 0
 	dist[Point{X: 0, Y: 0}] = 0
 
+	Q := make(PriorityQueue, 0)
+
+	var itemMap map[Point]*Item = make(map[Point]*Item, 0)
+
+	for i := 0; i < x; i++ {
+		for j := 0; j < y; j++ {
+			v := Point{X: i, Y: j}
+			// if v ≠ source
+			if !(v.X == 0 && v.Y == 0) {
+				dist[v] = -1
+			}
+			item := &Item{
+				value:    v,
+				priority: dist[v],
+			}
+			itemMap[v] = item
+			heap.Push(&Q, item)
+		}
+
+	}
+
 	// while Q is not empty:
-	for len(Q) != 0 {
-		// u ← vertex in Q with min dist[u]
-		u := minDistance(&Q, dist)
+	for Q.Len() != 0 {
+		// u ← Q.extract_min()
+		item := heap.Pop(&Q).(*Item)
+		u := item.value
 
-		n := neighbors(u, Q)
+		n := neighbors(u)
 
-		// for each neighbor v of u still in Q:
+		// for each neighbor v of u:
 		for _, v := range n {
 			// alt ← dist[u] + Graph.Edges(u, v)
 			alt := dist[u] + riskMap[v.Y][v.X]
@@ -318,11 +327,15 @@ func main() {
 				// dist[v] ← alt
 				dist[v] = alt
 				prev[v] = u
+				Q.update(itemMap[v], itemMap[v].value, alt)
+
 				// prev[v] ← u
 			}
 		}
 
 	}
+
+	fmt.Println("##################")
 
 	//  S ← empty sequence
 	S := make([]Point, 0)
@@ -378,7 +391,7 @@ func isInList(u Point, Q []Point) bool {
 	return false
 }
 
-func neighbors(u Point, Q []Point) []Point {
+func neighbors(u Point) []Point {
 	result := make([]Point, 0)
 
 	neighborCoordinates := [][]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
@@ -386,9 +399,7 @@ func neighbors(u Point, Q []Point) []Point {
 	for _, coord := range neighborCoordinates {
 		if u.X+coord[0] >= 0 && u.Y+coord[1] >= 0 && u.X+coord[0] < x && u.Y+coord[1] < y {
 			v := Point{X: u.X + coord[0], Y: u.Y + coord[1]}
-			if isInList(v, Q) {
-				result = append(result, v)
-			}
+			result = append(result, v)
 		}
 	}
 
@@ -465,27 +476,94 @@ type Point struct {
 func extend(matrix [][]int, multiplier int) [][]int {
 	y := len(matrix)
 	x := len(matrix[0])
+
+	// create result matrix of the new size
 	var result [][]int = make([][]int, y*multiplier)
 	for n := 0; n < multiplier*y; n++ {
 		result[n] = make([]int, x*multiplier)
 	}
-	for m := 0; m < multiplier*y; m++ {
-		for n := 0; n < multiplier*x; n++ {
-			incrementer := (n / x)
-			//fmt.Printf("multiplier: %d\n", multiplier)
 
-			//fmt.Printf("riskMap[%d][%d]: %d\n", m%y, n%x, riskMap[m%y][n%x])
-			//fmt.Printf("riskMap[%d][%d] * multiplier: %d\n", m%y, n%x, riskMap[m%y][n%x]*multiplier)
+	// put input matrix into top left of result matrix
+	for i := 0; i < y; i++ {
+		for j := 0; j < x; j++ {
+			result[i][j] = matrix[i][j]
+		}
+	}
 
-			r := (matrix[m%y][n%x] + incrementer) % 10
-			if r == 0 {
-				r = 1
+	for m := 0; m < multiplier; m++ {
+		for n := 0; n < multiplier; n++ {
+			// skip 0, 0
+			if m == 0 && n == 0 {
+				continue
 			}
 
-			result[m][n] = r
-
+			for i := 0; i < y; i++ {
+				for j := 0; j < x; j++ {
+					newRisk := 0
+					if j+(n*x)-x < 0 {
+						newRisk = (result[i+(m-1)*y][j+(n*x)] + 1) % 10
+					} else {
+						newRisk = (result[i+(m*y)][j+(n-1)*x] + 1) % 10
+					}
+					if newRisk == 0 {
+						newRisk = 1
+					}
+					result[i+(m*y)][j+(n*x)] = newRisk
+				}
+			}
 		}
 	}
 
 	return result
+}
+
+type Item struct {
+	value    Point
+	priority int
+	index    int
+}
+
+type PriorityQueue []*Item
+
+func (pq PriorityQueue) Len() int { return len(pq) }
+
+func (pq PriorityQueue) Less(i, j int) bool {
+	if pq[i].priority == -1 && pq[j].priority == -1 {
+		return true
+	} else if pq[i].priority == -1 {
+		return false
+	} else if pq[j].priority == -1 {
+		return true
+	}
+	// we want lowest priority, so we use less and -1 represents infinity
+	return pq[i].priority < pq[j].priority
+}
+
+func (pq PriorityQueue) Swap(i, j int) {
+	pq[i], pq[j] = pq[j], pq[i]
+	pq[i].index = i
+	pq[j].index = j
+}
+
+func (pq *PriorityQueue) Push(x any) {
+	n := len(*pq)
+	item := x.(*Item)
+	item.index = n
+	*pq = append(*pq, item)
+}
+
+func (pq *PriorityQueue) Pop() any {
+	old := *pq
+	n := len(old)
+	item := old[n-1]
+	old[n-1] = nil  // avoid memory leak
+	item.index = -1 // for safety
+	*pq = old[0 : n-1]
+	return item
+}
+
+func (pq *PriorityQueue) update(item *Item, value Point, priority int) {
+	item.value = value
+	item.priority = priority
+	heap.Fix(pq, item.index)
 }
