@@ -274,22 +274,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var newRiskMap [][]int = make([][]int, y*5)
-	for n := 0; n < 5*y; n++ {
-		newRiskMap[n] = make([]int, x*5)
-	}
-	for m := 0; m < 5*y; m++ {
-		for n := 0; n < 5*x; n++ {
-			incrementer := (n / x)
-			//fmt.Printf("multiplier: %d\n", multiplier)
-
-			//fmt.Printf("riskMap[%d][%d]: %d\n", m%y, n%x, riskMap[m%y][n%x])
-			//fmt.Printf("riskMap[%d][%d] * multiplier: %d\n", m%y, n%x, riskMap[m%y][n%x]*multiplier)
-
-			newRiskMap[m][n] = (riskMap[m%y][n%x] + incrementer) % 10
-
-		}
-	}
+	newRiskMap := extend(riskMap, 5)
 
 	fmt.Println("risk map:")
 	fmt.Println(newRiskMap)
@@ -475,4 +460,32 @@ func minDistance(Q *[]Point, dist map[Point]int) Point {
 
 type Point struct {
 	X, Y int
+}
+
+func extend(matrix [][]int, multiplier int) [][]int {
+	y := len(matrix)
+	x := len(matrix[0])
+	var result [][]int = make([][]int, y*multiplier)
+	for n := 0; n < multiplier*y; n++ {
+		result[n] = make([]int, x*multiplier)
+	}
+	for m := 0; m < multiplier*y; m++ {
+		for n := 0; n < multiplier*x; n++ {
+			incrementer := (n / x)
+			//fmt.Printf("multiplier: %d\n", multiplier)
+
+			//fmt.Printf("riskMap[%d][%d]: %d\n", m%y, n%x, riskMap[m%y][n%x])
+			//fmt.Printf("riskMap[%d][%d] * multiplier: %d\n", m%y, n%x, riskMap[m%y][n%x]*multiplier)
+
+			r := (matrix[m%y][n%x] + incrementer) % 10
+			if r == 0 {
+				r = 1
+			}
+
+			result[m][n] = r
+
+		}
+	}
+
+	return result
 }
