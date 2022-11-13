@@ -8,16 +8,18 @@ import (
 
 //go:generate go run gen.go
 
-var mainGo string = `
-package main
+var mainGo string = `package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 )
 
 func main() {
+	solver := NewPart1Solver()
+
 	file, err := os.Open("input.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -30,14 +32,15 @@ func main() {
 		if text == "" {
 			break
 		}
+		solver.Line(text)
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-}
-`
+	fmt.Printf("result: %s\n", solver.End())
+}`
 var partGo string = `package main
 
 type Part%[1]dSolver struct {
