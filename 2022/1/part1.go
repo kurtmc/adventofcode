@@ -28,7 +28,6 @@ func (s *Part1Solver) Line(l string) {
 		if err != nil {
 			panic(err)
 		}
-		//fmt.Println(i)
 		s.previous = s.previous + i
 	}
 }
