@@ -13,6 +13,7 @@ var mainGo string = `package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 )
@@ -29,14 +30,12 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		text := scanner.Text()
-		if text == "" {
-			break
-		}
 		solver.Line(text)
 	}
-
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		if err != io.EOF {
+			log.Fatal(err)
+		}
 	}
 
 	fmt.Printf("result: %s\n", solver.End())
@@ -57,7 +56,7 @@ func (s *Part%[1]dSolver) End() string {
 	return ""
 }`
 
-var years []string = []string{"2021"}
+var years []string = []string{"2021", "2022"}
 
 func main() {
 	fmt.Println("go generate!")
