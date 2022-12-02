@@ -26,7 +26,7 @@ func (s *Part1Solver) Line(l string) {
 	switch r := compare(me, opponent); r {
 	case 0:
 		scoreForResult = 3
-	case 1:
+	case -1:
 		scoreForResult = 6
 	}
 
@@ -61,34 +61,44 @@ func getHandFromLetter(l string) Hand {
 }
 
 func compare(a, b Hand) int {
-	if a == b {
-		return 0
+	if a == 0 && b == 2 {
+		return -1
+	} else if a == 2 && b == 0 {
+		return 1
+	} else if a < b {
+		return 1
+	} else if a > b {
+		return -1
 	}
+	return 0
+	//if a == b {
+	//	return 0
+	//}
 
-	if a == Rock { // 0
-		if b == Paper { // 1
-			return -1
-		}
-		if b == Scissors { // 2
-			return 1
-		}
-	}
-	if a == Paper { // 1
-		if b == Rock { // 0
-			return 1
-		}
-		if b == Scissors { // 2
-			return -1
-		}
-	}
-	if a == Scissors { // 2
-		if b == Rock { // 0
-			return -1
-		}
-		if b == Paper { // 1
-			return 1
-		}
-	}
+	//if a == Rock { // 0
+	//	if b == Paper { // 1
+	//		return -1
+	//	}
+	//	if b == Scissors { // 2
+	//		return 1
+	//	}
+	//}
+	//if a == Paper { // 1
+	//	if b == Rock { // 0
+	//		return 1
+	//	}
+	//	if b == Scissors { // 2
+	//		return -1
+	//	}
+	//}
+	//if a == Scissors { // 2
+	//	if b == Rock { // 0
+	//		return -1
+	//	}
+	//	if b == Paper { // 1
+	//		return 1
+	//	}
+	//}
 
-	return -999 // invalid
+	//return -999 // invalid
 }
