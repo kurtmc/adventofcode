@@ -92,53 +92,11 @@ func (s *Stack) Pop() byte {
 }
 
 func (s *Stack) PushN(r []byte) {
-	//toPush := make([]byte, len(r))
-	//copy(toPush, r)
-	//s.stack = append(s.stack, toPush...)
-
-	for i := 0; i < len(r); i++ {
-		s.Push(r[i])
-	}
-
+	s.stack = append(s.stack, r...)
 }
+
 func (s *Stack) PopN(n int) []byte {
-	result := make([]byte, 0)
-	for i := 0; i < n; i++ {
-		r := s.Pop()
-		result = append([]byte{r}, result...)
-	}
-	return result
-	//result := make([]byte, n)
-	//if n == 1 {
-	//	copy(result, []byte{s.Pop()})
-	//	return result
-	//}
-
-	////fmt.Printf("PopN(%d)\n", n)
-	////fmt.Println("before")
-	////fmt.Printf("s.stack = %c\n", s.stack)
-
-	//if n == len(s.stack) {
-	//	result := make([]byte, len(s.stack))
-	//	copy(result, s.stack)
-	//	s.stack = make([]byte, 0)
-	//	//fmt.Println("after")
-	//	//fmt.Printf("s.stack = %c\n", s.stack)
-	//	//fmt.Printf("result = %c\n", result)
-	//	return result
-
-	//} else {
-
-	//	elements := s.stack[len(s.stack)-(n+1) : len(s.stack)-1]
-	//	copy(result, elements)
-
-	//	newStack := s.stack[:len(s.stack)-n]
-	//	s.stack = make([]byte, len(newStack))
-	//	copy(s.stack, newStack)
-
-	//	//fmt.Println("after")
-	//	//fmt.Printf("s.stack = %c\n", s.stack)
-	//	//fmt.Printf("result = %c\n", result)
-	//	return result
-	//}
+	elements := s.stack[len(s.stack)-(n) : len(s.stack)]
+	s.stack = s.stack[:len(s.stack)-n]
+	return elements
 }
