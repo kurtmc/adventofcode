@@ -59,6 +59,12 @@ func (s *Part1Solver) Line(l string) {
 
 }
 
+func (s *Part1Solver) End() string {
+	CalcDirectorSizes(s.root)
+	PrintFs(s.root, 0)
+	return fmt.Sprintf("%d", SumAtMost(s.root, 100000))
+}
+
 func FileSliceAsPath(s []*File) string {
 	result := "/"
 	for _, v := range s {
@@ -68,12 +74,6 @@ func FileSliceAsPath(s []*File) string {
 		result = result + "/" + v.name
 	}
 	return result
-}
-
-func (s *Part1Solver) End() string {
-	CalcDirectorSizes(s.root)
-	PrintFs(s.root, 0)
-	return fmt.Sprintf("%d", SumAtMost(s.root, 100000))
 }
 
 type File struct {

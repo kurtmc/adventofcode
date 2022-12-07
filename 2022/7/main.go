@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	solver := NewPart1Solver()
+	solver := NewPart2Solver()
 
 	file, err := os.Open("input.txt")
 	if err != nil {
