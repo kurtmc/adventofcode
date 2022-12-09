@@ -26,18 +26,16 @@ type Part1Solver struct {
 }
 
 func NewPart1Solver() *Part1Solver {
-	grid := createGrid(5)
-	grid[2][2] = 's'
+	grid := createGrid(1)
 	result := &Part1Solver{
 		grid:             grid,
-		startingPosition: NewPoint(1, 2),
-		headPosition:     NewPoint(1, 2),
-		tailPosition:     NewPoint(1, 2),
+		startingPosition: NewPoint(0, 0),
+		headPosition:     NewPoint(0, 0),
+		tailPosition:     NewPoint(0, 0),
+		tailPositions:    make([]Point, 0),
 	}
 
-	result.expandGrid(10)
-
-	printGrid(result.grid)
+	result.tailPositions = append(result.tailPositions, Point{X: 0, Y: 0})
 
 	fmt.Println(result.headPosition)
 	fmt.Println(result.tailPosition)
@@ -71,7 +69,7 @@ func (s *Part1Solver) End() string {
 		m[v] = true
 	}
 
-	return fmt.Sprintf("%d", len(m)+1)
+	return fmt.Sprintf("%d", len(m))
 }
 
 func isTouching(head, tail *Point) bool {
