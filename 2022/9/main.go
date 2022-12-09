@@ -9,9 +9,9 @@ import (
 )
 
 func main() {
-	solver := NewPart1Solver()
+	solver := NewPart2Solver()
 
-	file, err := os.Open("input.txt")
+	file, err := os.Open("sample2.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
