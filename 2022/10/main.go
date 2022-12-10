@@ -11,7 +11,7 @@ import (
 func main() {
 	solver := NewPart1Solver()
 
-	file, err := os.Open("input.txt")
+	file, err := os.Open("sample.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
