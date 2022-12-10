@@ -10,26 +10,27 @@ type Part2Solver struct {
 	grid             [][]rune
 	startingPosition *Point
 	rope             *Knot
-	tailPositions    []Point
 }
 
 type Knot struct {
-	name             rune
-	position         *Point
-	previousPosition *Point
-	nextKnot         *Knot
+	name              rune
+	position          *Point
+	previousPositions []Point
+	nextKnot          *Knot
 }
 
 func (k *Knot) move(x, y int) {
-	k.previousPosition = NewPoint(k.position.X, k.position.Y)
+	p := NewPoint(k.position.X, k.position.Y)
+	k.previousPositions = append(k.previousPositions, *p)
 	k.position.X = x
 	k.position.Y = y
 }
 
 func NewKnot(name rune, x, y int) *Knot {
 	return &Knot{
-		name:     name,
-		position: NewPoint(x, y),
+		name:              name,
+		position:          NewPoint(x, y),
+		previousPositions: []Point{{X: 0, Y: 0}},
 	}
 }
 
@@ -49,7 +50,6 @@ func NewPart2Solver() *Part2Solver {
 		grid:             grid,
 		startingPosition: NewPoint(0, 0),
 		rope:             rope,
-		tailPositions:    make([]Point, 0),
 	}
 	fmt.Print("#######################\n")
 	fmt.Print("#######################\n")
@@ -64,8 +64,6 @@ func NewPart2Solver() *Part2Solver {
 	fmt.Print("#######################\n")
 	fmt.Print("#######################\n")
 
-	result.tailPositions = append(result.tailPositions, Point{X: 0, Y: 0})
-
 	result.expandGrid(10)
 
 	return result
@@ -77,14 +75,14 @@ func (s *Part2Solver) Line(l string) {
 	direction := instruction[0]
 	count, _ := strconv.Atoi(instruction[1])
 
-	s.plotRope()
-	fmt.Println("initial state:")
-	s.PrintGridState()
+	//s.plotRope()
+	//fmt.Println("initial state:")
+	//s.PrintGridState()
 
 	for i := 0; i < count; i++ {
 		fmt.Printf("\nmove %s\n", direction)
 		s.moveHead(direction)
-		s.PrintGridState()
+		//s.PrintGridState()
 	}
 
 }
@@ -112,12 +110,23 @@ func (s *Part2Solver) PrintGridState() {
 func (s *Part2Solver) End() string {
 	//fmt.Println(s.tailPositions)
 
+	s.plotTailPositions()
 	printGrid(s.grid)
 
 	m := make(map[Point]bool, 0)
-	for _, v := range s.tailPositions {
+	var tail *Knot
+	current := s.rope
+	for current != nil {
+		if current.name == '9' {
+			tail = current
+			break
+		}
+		current = current.nextKnot
+	}
+	for _, v := range tail.previousPositions {
 		m[v] = true
 	}
+	m[*tail.position] = true
 
 	return fmt.Sprintf("%d", len(m))
 }
@@ -219,6 +228,38 @@ func (s *Part2Solver) plotRope() {
 	}
 }
 
+func (s *Part2Solver) plotTailPositions() {
+	s.grid[s.startingPosition.Y][s.startingPosition.X] = 's'
+
+	var tail *Knot
+	current := s.rope
+	for current != nil {
+		if current.name == '9' {
+			tail = current
+			break
+		}
+		current = current.nextKnot
+	}
+
+	knots := make([]*Knot, 0)
+
+	current = s.rope
+	for current != nil {
+		knots = append([]*Knot{current}, knots...)
+
+		current = current.nextKnot
+	}
+
+	for _, knot := range knots {
+		s.grid[knot.position.Y][knot.position.X] = '.'
+	}
+
+	for _, v := range tail.previousPositions {
+		s.grid[v.Y][v.X] = '#'
+	}
+	s.grid[s.startingPosition.Y][s.startingPosition.X] = 's'
+}
+
 func (s *Part2Solver) expandGrid(amount int) {
 	fmt.Println("expanding grid")
 	newGrid := expandGridHelper(s.grid, amount)
@@ -231,16 +272,11 @@ func (s *Part2Solver) expandGrid(amount int) {
 		current.position.X = current.position.X + amount
 		current.position.Y = current.position.Y + amount
 
-		if current.previousPosition != nil {
-			current.previousPosition.X = current.previousPosition.X + 1
-			current.previousPosition.Y = current.previousPosition.Y + 1
+		for i := 0; i < len(current.previousPositions); i++ {
+			current.previousPositions[i].X = current.previousPositions[i].X + amount
+			current.previousPositions[i].Y = current.previousPositions[i].Y + amount
 		}
 
 		current = current.nextKnot
-	}
-
-	for i := range s.tailPositions {
-		s.tailPositions[i].X = s.tailPositions[i].X + amount
-		s.tailPositions[i].Y = s.tailPositions[i].Y + amount
 	}
 }
