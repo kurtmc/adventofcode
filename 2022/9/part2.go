@@ -175,7 +175,25 @@ func (s *Part2Solver) moveHead(direction string) {
 		if !isTouching(current.position, current.nextKnot.position) {
 			s.grid[current.nextKnot.position.Y][current.nextKnot.position.X] = '.'
 
-			current.nextKnot.move(current.previousPosition.X, current.previousPosition.Y)
+			transX := current.position.X - current.nextKnot.position.X
+			transY := current.position.Y - current.nextKnot.position.Y
+
+			if transX > 1 {
+				transX = 1
+			}
+			if transX < -1 {
+				transX = -1
+			}
+			if transY > 1 {
+				transY = 1
+			}
+			if transY < -1 {
+				transY = -1
+			}
+
+			fmt.Printf("transX = %d, transY = %d\n", transX, transY)
+
+			current.nextKnot.move(current.nextKnot.position.X+transX, current.nextKnot.position.Y+transY)
 		}
 
 		current = current.nextKnot
