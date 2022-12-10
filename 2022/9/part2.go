@@ -9,18 +9,40 @@ import (
 type Part2Solver struct {
 	grid             [][]rune
 	startingPosition *Point
-	rope             []*Point
+	rope             *Knot
 	tailPositions    []Point
+}
+
+type Knot struct {
+	name             rune
+	position         *Point
+	previousPosition *Point
+	nextKnot         *Knot
+}
+
+func (k *Knot) move(x, y int) {
+	k.previousPosition = NewPoint(k.position.X, k.position.Y)
+	k.position.X = x
+	k.position.Y = y
+}
+
+func NewKnot(name rune, x, y int) *Knot {
+	return &Knot{
+		name:     name,
+		position: NewPoint(x, y),
+	}
 }
 
 func NewPart2Solver() *Part2Solver {
 	grid := createGrid(1)
 
-	ropeLength := 3
+	ropeLength := 10
 
-	rope := make([]*Point, 0)
-	for i := 0; i < ropeLength; i++ {
-		rope = append(rope, NewPoint(0, 0))
+	rope := NewKnot('H', 0, 0)
+	current := rope
+	for i := 0; i < ropeLength-1; i++ {
+		current.nextKnot = NewKnot(rune('1'+i), 0, 0)
+		current = current.nextKnot
 	}
 
 	result := &Part2Solver{
@@ -29,8 +51,22 @@ func NewPart2Solver() *Part2Solver {
 		rope:             rope,
 		tailPositions:    make([]Point, 0),
 	}
+	fmt.Print("#######################\n")
+	fmt.Print("#######################\n")
+	fmt.Print("#######################\n")
+	fmt.Print("#######################\n")
+
+	current = result.rope
+	for current != nil {
+		fmt.Printf("%c\n", current.name)
+		current = current.nextKnot
+	}
+	fmt.Print("#######################\n")
+	fmt.Print("#######################\n")
 
 	result.tailPositions = append(result.tailPositions, Point{X: 0, Y: 0})
+
+	result.expandGrid(10)
 
 	return result
 }
@@ -47,23 +83,30 @@ func (s *Part2Solver) Line(l string) {
 
 	for i := 0; i < count; i++ {
 		fmt.Printf("\nmove %s\n", direction)
-		s.moveHead2(direction)
+		s.moveHead(direction)
 		s.PrintGridState()
 	}
 
+}
+
+func (s *Part2Solver) PrintRopeState() {
+	current := s.rope
+	for current != nil {
+		fmt.Printf("(%c, (%d, %d))", current.name, current.position.X, current.position.Y)
+		if current.nextKnot != nil {
+			fmt.Printf(", ")
+		}
+		current = current.nextKnot
+	}
+
+	fmt.Printf("\n")
 }
 
 func (s *Part2Solver) PrintGridState() {
 	printGrid(s.grid)
 	fmt.Printf("s.startingPosition: (x: %d, y: %d)\n", s.startingPosition.X, s.startingPosition.Y)
 	fmt.Printf("s.rope: ")
-	for i, v := range s.rope {
-		if i != 0 {
-			fmt.Printf(", ")
-		}
-		fmt.Printf("(x: %d, y: %d)", v.X, v.Y)
-	}
-	fmt.Printf("\n")
+	s.PrintRopeState()
 }
 
 func (s *Part2Solver) End() string {
@@ -79,141 +122,82 @@ func (s *Part2Solver) End() string {
 	return fmt.Sprintf("%d", len(m))
 }
 
-func (s *Part2Solver) moveHead2(direction string) {
-
-	headIndex := len(s.rope) - 1
-	tailIndex := headIndex - 1
-
-	for _, knot := range s.rope {
-		s.grid[knot.Y][knot.X] = '.'
+func isDiagonal(head, tail *Point) bool {
+	if !isTouching(head, tail) {
+		return false
 	}
-	if direction == "R" || direction == "L" {
-		horizontalTranslation := 1
-		if direction == "L" {
-			horizontalTranslation = -1
-		}
-
-		if len(s.grid[s.rope[headIndex].Y])-s.rope[headIndex].X == 1 {
-			s.expandGrid(1)
-		} else if (s.rope[headIndex].X + horizontalTranslation) < 0 {
-			s.expandGrid(1)
-		}
-
-		if *s.rope[headIndex] == *s.rope[tailIndex] {
-			s.rope[headIndex].X = s.rope[headIndex].X + horizontalTranslation
-		} else {
-			s.rope[headIndex].X = s.rope[headIndex].X + horizontalTranslation
-			for i := len(s.rope) - 1; i >= 1; i-- {
-				headIndex := i
-				tailIndex := headIndex - 1
-				if !isTouching(s.rope[headIndex], s.rope[tailIndex]) {
-					s.rope[tailIndex].X = s.rope[headIndex].X - horizontalTranslation
-					s.rope[tailIndex].Y = s.rope[headIndex].Y
-				}
-			}
-		}
-	} else if direction == "U" || direction == "D" {
-		verticalTranslation := 1
-		if direction == "U" {
-			verticalTranslation = -1
-		}
-
-		if len(s.grid)-s.rope[headIndex].Y == 1 {
-			s.expandGrid(1)
-		} else if (s.rope[headIndex].Y + verticalTranslation) < 0 {
-			s.expandGrid(1)
-		}
-
-		if *s.rope[headIndex] == *s.rope[tailIndex] {
-			s.rope[headIndex].Y = s.rope[headIndex].Y + verticalTranslation
-
-		} else {
-			s.rope[headIndex].Y = s.rope[headIndex].Y + verticalTranslation
-			for i := len(s.rope) - 1; i >= 1; i-- {
-				headIndex := i
-				tailIndex := headIndex - 1
-				if !isTouching(s.rope[headIndex], s.rope[tailIndex]) {
-					s.rope[tailIndex].X = s.rope[headIndex].X
-					s.rope[tailIndex].Y = s.rope[headIndex].Y - verticalTranslation
-				}
-			}
-		}
+	if head.X == tail.X {
+		return false
 	}
-
-	s.plotRope()
+	if head.Y == tail.Y {
+		return false
+	}
+	return true
 }
 
 func (s *Part2Solver) moveHead(direction string) {
+	fmt.Println("header")
+	current := s.rope
+	for current != nil {
+		s.grid[s.rope.position.Y][s.rope.position.X] = '.'
 
-	headIndex := 1
-	tailIndex := 0
-
-	for _, knot := range s.rope {
-		s.grid[knot.Y][knot.X] = '.'
+		current = current.nextKnot
 	}
-	if direction == "R" || direction == "L" {
-		horizontalTranslation := 1
-		if direction == "L" {
-			horizontalTranslation = -1
+
+	// expand grid if the head of the rope is on the edge
+	if len(s.grid[s.rope.position.Y])-s.rope.position.X == 1 || ((s.rope.position.X - 1) < 0) {
+		s.expandGrid(1)
+	} else if len(s.grid)-s.rope.position.Y == 1 || ((s.rope.position.Y - 1) < 0) {
+		s.expandGrid(1)
+	}
+
+	translation := Point{X: 0, Y: 0}
+	if direction == "R" {
+		translation.X = 1
+	} else if direction == "L" {
+		translation.X = -1
+	} else if direction == "U" {
+		translation.Y = -1
+	} else if direction == "D" {
+		translation.Y = 1
+	}
+
+	// move the head of the rope
+	head := s.rope
+	head.move(head.position.X+translation.X, head.position.Y+translation.Y)
+
+	current = head
+	for current != nil {
+		if current.nextKnot == nil {
+			break
 		}
 
-		if len(s.grid[s.rope[headIndex].Y])-s.rope[headIndex].X == 1 {
-			s.expandGrid(1)
-		} else if (s.rope[headIndex].X + horizontalTranslation) < 0 {
-			s.expandGrid(1)
+		if !isTouching(current.position, current.nextKnot.position) {
+			s.grid[current.nextKnot.position.Y][current.nextKnot.position.X] = '.'
+
+			current.nextKnot.move(current.previousPosition.X, current.previousPosition.Y)
 		}
 
-		if *s.rope[headIndex] == *s.rope[tailIndex] {
-			s.rope[1].X = s.rope[1].X + horizontalTranslation
-
-		} else {
-			s.rope[headIndex].X = s.rope[headIndex].X + horizontalTranslation
-			if !isTouching(s.rope[headIndex], s.rope[tailIndex]) {
-				s.rope[tailIndex].X = s.rope[headIndex].X - horizontalTranslation
-				s.rope[tailIndex].Y = s.rope[headIndex].Y
-
-				s.tailPositions = append(s.tailPositions, *s.rope[tailIndex])
-			}
-		}
-	} else if direction == "U" || direction == "D" {
-		verticalTranslation := 1
-		if direction == "U" {
-			verticalTranslation = -1
-		}
-
-		if len(s.grid)-s.rope[headIndex].Y == 1 {
-			s.expandGrid(1)
-		} else if (s.rope[headIndex].Y + verticalTranslation) < 0 {
-			s.expandGrid(1)
-		}
-
-		if *s.rope[headIndex] == *s.rope[tailIndex] {
-			s.rope[headIndex].Y = s.rope[headIndex].Y + verticalTranslation
-
-		} else {
-			s.rope[headIndex].Y = s.rope[headIndex].Y + verticalTranslation
-			if !isTouching(s.rope[headIndex], s.rope[tailIndex]) {
-				fmt.Println("NOT TOUCHING")
-				s.rope[tailIndex].X = s.rope[headIndex].X
-				s.rope[tailIndex].Y = s.rope[headIndex].Y - verticalTranslation
-
-				s.tailPositions = append(s.tailPositions, *s.rope[tailIndex])
-			}
-		}
+		current = current.nextKnot
 	}
 
 	s.plotRope()
 }
 
 func (s *Part2Solver) plotRope() {
-	ropeRunes := []rune{'1', '2', '3', '4', '5', '6', '7', '8', '9', 'H'}
-
 	s.grid[s.startingPosition.Y][s.startingPosition.X] = 's'
 
-	for i := 0; i < len(s.rope); i++ {
-		j := len(ropeRunes) - len(s.rope) + i
-		//fmt.Printf("i = %d, j = %d, ropeRunes[%d] = %c\n", i, j, j, ropeRunes[j])
-		s.grid[s.rope[i].Y][s.rope[i].X] = ropeRunes[j]
+	knots := make([]*Knot, 0)
+
+	current := s.rope
+	for current != nil {
+		knots = append([]*Knot{current}, knots...)
+
+		current = current.nextKnot
+	}
+
+	for _, knot := range knots {
+		s.grid[knot.position.Y][knot.position.X] = knot.name
 	}
 }
 
@@ -224,8 +208,17 @@ func (s *Part2Solver) expandGrid(amount int) {
 	s.grid = newGrid
 	s.startingPosition = NewPoint(s.startingPosition.X+amount, s.startingPosition.Y+amount)
 
-	for i := range s.rope {
-		s.rope[i] = NewPoint(s.rope[i].X+amount, s.rope[i].Y+amount)
+	current := s.rope
+	for current != nil {
+		current.position.X = current.position.X + amount
+		current.position.Y = current.position.Y + amount
+
+		if current.previousPosition != nil {
+			current.previousPosition.X = current.previousPosition.X + 1
+			current.previousPosition.Y = current.previousPosition.Y + 1
+		}
+
+		current = current.nextKnot
 	}
 
 	for i := range s.tailPositions {
