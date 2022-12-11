@@ -29,13 +29,13 @@ func (s *Part1Solver) Line(l string) {
 			r := strings.TrimPrefix(l, "  Starting items: ")
 			parts := strings.Split(r, ", ")
 			for _, part := range parts {
-				item, _ := strconv.Atoi(part)
+				item, _ := strconv.ParseUint(part, 10, 64)
 				s.currentMonkey.Items = append(s.currentMonkey.Items, item)
 			}
 		} else if strings.HasPrefix(l, "  Operation: ") {
 			s.currentMonkey.SetOperation(strings.TrimPrefix(l, "  Operation: "))
 		} else if strings.HasPrefix(l, "  Test: divisible by ") {
-			s.currentMonkey.Test, _ = strconv.Atoi(strings.TrimPrefix(l, "  Test: divisible by "))
+			s.currentMonkey.Test, _ = strconv.ParseUint(strings.TrimPrefix(l, "  Test: divisible by "), 10, 64)
 		} else if strings.HasPrefix(l, "    If true: ") {
 			r := strings.TrimPrefix(l, "    If true: throw to monkey ")
 			s.currentMonkey.TestTrueMonkey, _ = strconv.Atoi(r)

@@ -15,9 +15,9 @@ import (
 
 type Monkey struct {
 	Name      int
-	Items     []int
+	Items     []uint64
 	Operation *Operation
-	Test      int // divisible by this number
+	Test      uint64 // divisible by this number
 
 	TestTrueMonkey  int
 	TestFalseMonkey int
@@ -29,15 +29,15 @@ func (m *Monkey) HasItems() bool {
 	return len(m.Items) > 0
 }
 
-func (m *Monkey) GetItemForInspection() int {
+func (m *Monkey) GetItemForInspection() uint64 {
 	m.ItemsInspected++
 
-	var item int
+	var item uint64
 	item, m.Items = m.Items[0], m.Items[1:]
 	return item
 }
 
-func (m *Monkey) CatchItem(item int) {
+func (m *Monkey) CatchItem(item uint64) {
 	m.Items = append(m.Items, item)
 }
 
@@ -45,7 +45,7 @@ func (m *Monkey) String() string {
 
 	startingItems := ""
 	for _, v := range m.Items {
-		startingItems = startingItems + strconv.Itoa(v) + ", "
+		startingItems = fmt.Sprintf("%s%d, ", startingItems, v)
 	}
 
 	startingItems = strings.TrimSuffix(startingItems, ", ")
@@ -85,29 +85,26 @@ func NewOperation(operation string) *Operation {
 	}
 }
 
-func (o *Operation) Evalute(old int) int {
-	lhs, rhs := 0, 0
+func (o *Operation) Evalute(old uint64) uint64 {
+	var lhs uint64 = 0
+	var rhs uint64 = 0
 
 	if o.LHS == "old" {
 		lhs = old
 	} else {
-		lhs, _ = strconv.Atoi(o.LHS)
+		lhs, _ = strconv.ParseUint(o.LHS, 10, 64)
 	}
 	if o.RHS == "old" {
 		rhs = old
 	} else {
-		rhs, _ = strconv.Atoi(o.RHS)
+		rhs, _ = strconv.ParseUint(o.RHS, 10, 64)
 	}
 
 	switch o.Operator {
 	case "+":
 		return lhs + rhs
-	case "-":
-		return lhs - rhs
 	case "*":
 		return lhs * rhs
-	case "/":
-		return lhs / rhs
 	default:
 		panic(fmt.Sprintf("unknown operator: %v", o.Operator))
 	}
