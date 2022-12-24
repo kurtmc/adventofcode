@@ -17,7 +17,6 @@ func NewPart1Solver() *Part1Solver {
 }
 
 func (s *Part1Solver) Line(l string) {
-
 	if l == "" {
 		cmp := compare(convert(s.a), convert(s.b))
 		fmt.Println(cmp)
